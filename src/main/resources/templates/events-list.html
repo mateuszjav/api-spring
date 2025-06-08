@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista Wydarzeń</title>
+    <style>
+        table { width: 80%; border-collapse: collapse; margin: 20px auto; }
+        th, td { border: 1px solid #dddddd; text-align: left; padding: 8px; }
+        th { background-color: #f2f2f2; }
+        body { font-family: sans-serif; }
+    </style>
+</head>
+<body>
+
+<h1 style="text-align: center;">Wszystkie Imprezy</h1>
+
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Nazwa Wydarzenia</th>
+        <th>Lokalizacja</th>
+        <th>Organizator</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="event : ${events}">
+        <td th:text="${event.id}">1</td>
+        <td th:text="${event.name}">Urodziny Adama</td>
+        <td th:text="${event.location}">Dom Adama</td>
+        <td th:text="${event.organizer.username}">adam</td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>

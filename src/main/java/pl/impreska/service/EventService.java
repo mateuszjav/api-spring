@@ -1,9 +1,11 @@
 package pl.impreska.service;
 
 import jakarta.transaction.Transactional;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import pl.impreska.dto.EventCreateRequest;
 import pl.impreska.dto.EventResponseDto;
+import pl.impreska.dto.UpdateParticipantStatusRequest;
 import pl.impreska.mapper.EventMapper;
 import pl.impreska.model.*;
 import pl.impreska.repository.EventParticipantRepository;
@@ -43,6 +45,31 @@ public class EventService {
         eventRepository.deleteById(id);
     }
 
+    public Optional<EventParticipant> updateParticipantStatus(Long eventId, Long userId, UpdateParticipantStatusRequest request){
+        Optional<EventParticipant> participantOptional = participantRepository.findByEventIdAndUserId(eventId, userId);
+
+        if(participantOptional.isPresent()){
+            EventParticipant participant = participantOptional.get();
+
+            if(request.getAttendanceStatus() != null){
+                participant.setAttendanceStatus(request.getAttendanceStatus());
+            }
+
+            if(request.getDrinkingStatus() != null){
+                participant.setDrinkingStatus(request.getDrinkingStatus());
+            }
+
+            if(request.getDrink() != null){
+                participant.setDrink(request.getDrink());
+            }
+
+            EventParticipant save = participantRepository.save(participant);
+            return Optional.of(save);
+        }
+
+        return Optional.empty();
+    }
+
 
     public Event createEventWithParticipants(EventCreateRequest request) {
         User organizer = userRepository.findById(request.getOrganizerId())
@@ -57,7 +84,17 @@ public class EventService {
         event.setOrganizer(organizer);
         Event savedEvent = eventRepository.save(event);
 
+        EventParticipant eventOrganizerParticipant = new EventParticipant();
+        eventOrganizerParticipant.setEvent(savedEvent);
+        eventOrganizerParticipant.setUser(organizer);
+        eventOrganizerParticipant.setDrink("Nie wybrane");
+        eventOrganizerParticipant.setAttendanceStatus(AttendanceStatus.NO_ANSWER);
+        eventOrganizerParticipant.setDrinkingStatus(DrinkingStatus.NO_ANSWER);
+
         List<EventParticipant> participants = new ArrayList<>();
+
+        participants.add(eventOrganizerParticipant);
+        participantRepository.save(eventOrganizerParticipant);
 
         if(request.getParticipants() != null) {
             for (Long userId : request.getParticipants()) {
@@ -77,14 +114,21 @@ public class EventService {
                 participantRepository.save(eventParticipant);
             }
         }
+
+
         savedEvent.setParticipants(participants);
 
         return savedEvent;
 
     }
 
-    public void deleteEvent(Long id) {
-        eventRepository.deleteById(id);
+    public boolean deleteEvent(Long id) {
+        if(eventRepository.existsById(id)){
+            eventRepository.deleteById(id);
+            return true;
+        } else {
+            return false;
+        }
     }
 
 
